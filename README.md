@@ -103,3 +103,6 @@ Each endpoint becomes a **database row** with filterable/sortable properties (me
 - [English](docs/en/getting-started.md)
 - [Korean](docs/ko/getting-started.md)
 
+## Contact
+- luisgunkim@gmail.com
+

@@ -37,9 +37,9 @@ dependencies {
 
 ```xml
 <dependency>
-    <groupId>org.bigtablet</groupId>
-    <artifactId>bigtablet-notion-docs</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <groupId>io.github.lgwk42</groupId>
+    <artifactId>notion-docs</artifactId>
+    <version>1.0.0</version>
 </dependency>
 ```
 ---
