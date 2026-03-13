@@ -1,0 +1,57 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+group = 'org.lgwk42'
+version = '1.0.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Boot autoconfigure (compileOnly - 소비자 프로젝트의 버전 사용)
+    compileOnly 'org.springframework.boot:spring-boot-autoconfigure:3.4.3'
+    compileOnly 'org.springframework:spring-web:6.2.3'
+    compileOnly 'org.springframework:spring-webmvc:6.2.3'
+
+    // Configuration metadata 생성 (IDE 자동완성)
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor:3.4.3'
+
+    // Jackson for JSON (Notion API 통신)
+    compileOnly 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
+
+    // Jakarta Validation (DTO 필수 여부 판단)
+    compileOnly 'jakarta.validation:jakarta.validation-api:3.1.0'
+
+    // SLF4J for logging
+    compileOnly 'org.slf4j:slf4j-api:2.0.12'
+
+    // Test
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.4.3'
+    testImplementation 'org.springframework.boot:spring-boot-starter-web:3.4.3'
+    testImplementation 'org.springframework.boot:spring-boot-starter-validation:3.4.3'
+    testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
