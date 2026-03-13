@@ -12,7 +12,8 @@
       "Bash(gpg --list-keys)",
       "Bash(git diff:*)",
       "Bash(git stash:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git remote:*)"
     ]
   }
 }
