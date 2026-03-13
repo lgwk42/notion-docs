@@ -1,0 +1,36 @@
+name: Publish to Maven Central
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Import GPG key
+        run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+
+      - name: Build and create bundle
+        run: ./gradlew clean bundleForCentral
+        env:
+          GPG_TTY: /dev/console
+          GRADLE_OPTS: >-
+            -Psigning.gnupg.executable=gpg
+            -Psigning.gnupg.keyName=${{ secrets.GPG_KEY_ID }}
+            -Psigning.gnupg.passphrase=${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Upload to Maven Central
+        run: |
+          curl --fail -u "${{ secrets.SONATYPE_USERNAME }}:${{ secrets.SONATYPE_PASSWORD }}" \
+            -F bundle=@build/central-bundle.zip \
+            'https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC'
