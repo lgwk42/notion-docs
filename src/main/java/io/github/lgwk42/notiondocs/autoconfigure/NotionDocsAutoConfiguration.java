@@ -17,6 +17,7 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
@@ -49,7 +50,8 @@ public class NotionDocsAutoConfiguration {
     }
 
     @Bean
-    public ApiEndpointScanner apiEndpointScanner(RequestMappingHandlerMapping handlerMapping,
+    public ApiEndpointScanner apiEndpointScanner(
+            @Qualifier("requestMappingHandlerMapping") RequestMappingHandlerMapping handlerMapping,
                                                   DtoFieldExtractor fieldExtractor,
                                                   EndpointMetadataResolver metadataResolver,
                                                   EndpointParameterExtractor parameterExtractor,
