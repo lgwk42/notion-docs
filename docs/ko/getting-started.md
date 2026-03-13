@@ -29,7 +29,7 @@
 
 ```groovy
 dependencies {
-    implementation 'org.bigtablet:bigtablet-notion-docs:0.1.0-SNAPSHOT'
+  implementation 'io.github.lgwk42:notion-docs:1.0.0'
 }
 ```
 
@@ -42,9 +42,6 @@ dependencies {
     <version>0.1.0-SNAPSHOT</version>
 </dependency>
 ```
-
-> **참고:** 현재 로컬 Maven에 퍼블리시됩니다. 사용하려면 이 저장소에서 `./gradlew publishToMavenLocal`을 먼저 실행하고, 프로젝트의 repositories에 `mavenLocal()`을 추가하세요.
-
 ---
 
 ## 설정

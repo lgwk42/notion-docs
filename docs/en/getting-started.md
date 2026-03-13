@@ -29,7 +29,7 @@
 
 ```groovy
 dependencies {
-    implementation 'org.bigtablet:bigtablet-notion-docs:0.1.0-SNAPSHOT'
+    implementation 'io.github.lgwk42:notion-docs:1.0.0'
 }
 ```
 
@@ -37,13 +37,11 @@ dependencies {
 
 ```xml
 <dependency>
-    <groupId>org.bigtablet</groupId>
-    <artifactId>bigtablet-notion-docs</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <groupId>io.github.lgwk42</groupId>
+    <artifactId>notion-docs</artifactId>
+    <version>1.0.0</version>
 </dependency>
 ```
-
-> **Note:** This library is currently published to local Maven. To use it in your project, run `./gradlew publishToMavenLocal` in this repository first, and add `mavenLocal()` to your project's repositories.
 
 ---
 
