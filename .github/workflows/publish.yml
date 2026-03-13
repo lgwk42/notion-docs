@@ -21,13 +21,13 @@ jobs:
         run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
 
       - name: Build and create bundle
-        run: ./gradlew clean bundleForCentral
+        run: >-
+          ./gradlew clean bundleForCentral
+          -Psigning.gnupg.executable=gpg
+          -Psigning.gnupg.keyName=${{ secrets.GPG_KEY_ID }}
+          -Psigning.gnupg.passphrase=${{ secrets.GPG_PASSPHRASE }}
         env:
           GPG_TTY: /dev/console
-          GRADLE_OPTS: >-
-            -Psigning.gnupg.executable=gpg
-            -Psigning.gnupg.keyName=${{ secrets.GPG_KEY_ID }}
-            -Psigning.gnupg.passphrase=${{ secrets.GPG_PASSPHRASE }}
 
       - name: Upload to Maven Central
         run: |
