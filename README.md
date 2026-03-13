@@ -19,7 +19,7 @@ Each endpoint becomes a **database row** with filterable/sortable properties (me
 ## How It Works
 
 ```
-┌─────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────┐
 │                   Spring Boot Application                │
 │                                                          │
 │  @RestController ──┐                                     │
@@ -27,44 +27,44 @@ Each endpoint becomes a **database row** with filterable/sortable properties (me
 │  @RestController ──┘          │                          │
 │                               ▼                          │
 │                     ┌─────────────────┐                  │
-│                     │  NotionDocSync   │                  │
-│                     │    Listener      │                  │
-│                     └────────┬────────┘                   │
+│                     │  NotionDocSync  │                  │
+│                     │    Listener     │                  │
+│                     └────────┬────────┘                  │
 │                              │ (virtual thread)          │
 └──────────────────────────────┼───────────────────────────┘
                                │
               ┌────────────────┼────────────────┐
-              ▼                ▼                 ▼
+              ▼                ▼                ▼
      ┌──────────────┐ ┌──────────────┐ ┌──────────────────┐
-     │   Scanner     │ │    Sync      │ │  Notion Client   │
-     │               │ │              │ │                   │
-     │ • Endpoint    │ │ • Change     │ │ • Create DB       │
-     │   scanning    │ │   detection  │ │ • Create/Update   │
-     │ • @NotionDoc  │ │   (SHA-256)  │ │   rows            │
-     │   metadata    │ │ • DB manager │ │ • Append blocks   │
-     │ • DTO field   │ │              │ │                   │
-     │   extraction  │ │              │ │                   │
-     └──────┬───────┘ └──────┬───────┘ └────────┬──────────┘
+     │   Scanner    │ │    Sync      │ │  Notion Client   │
+     │              │ │              │ │                  │
+     │ • Endpoint   │ │ • Change     │ │ • Create DB      │
+     │   scanning   │ │   detection  │ │ • Create/Update  │
+     │ • @NotionDoc │ │   (SHA-256)  │ │   rows           │
+     │   metadata   │ │ • DB manager │ │ • Append blocks  │
+     │ • DTO field  │ │              │ │                  │
+     │   extraction │ │              │ │                  │
+     └──────┬───────┘ └──────┬───────┘ └─────────┬────────┘
             │                │                   │
             ▼                ▼                   ▼
      ┌─────────────────────────────────────────────────────┐
-     │                  Notion Render                       │
-     │                                                      │
-     │  • Database schema & row properties                  │
-     │  • Page body blocks (headings, tables, code blocks)  │
-     │  • JSON example generation                           │
-     │  • Parameter table with dot notation flattening      │
+     │                  Notion Render                      │
+     │                                                     │
+     │  • Database schema & row properties                 │
+     │  • Page body blocks (headings, tables, code blocks) │
+     │  • JSON example generation                          │
+     │  • Parameter table with dot notation flattening     │
      └─────────────────────────────────────────────────────┘
                                │
                                ▼
                     ┌─────────────────────┐
-                    │    Notion Database   │
+                    │    Notion Database  │
                     │                     │
                     │ ┌─────────────────┐ │
                     │ │ API │ URI │ ... │ │
                     │ ├─────┼─────┼─────┤ │
-                    │ │ Row → Detail Page│ │
-                    │ │ Row → Detail Page│ │
+                    │ │ Row → DetailPage│ │
+                    │ │ Row → DetailPage│ │
                     │ └─────────────────┘ │
                     └─────────────────────┘
 ```
