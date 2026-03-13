@@ -95,8 +95,12 @@ Each endpoint becomes a **database row** with filterable/sortable properties (me
     | Parameter | Type | Description |
 
 ## Response
-  { JSON example }
+  { JSON example }                ← single response (inferred from return type)
   | Parameter | Type | Description |
+
+  ### 200 Success               ← multi-response (via @Response annotation)
+  ### 404 Not Found
+  ### 403 Forbidden
 ```
 
 ## Documentation

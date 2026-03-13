@@ -146,6 +146,35 @@ This generates:
 | `description` | Method | API description shown in the detail page. |
 | `domain` | Class / Method | Domain category. Class-level applies to all methods; method-level overrides. |
 | `auth` | Method | Access roles array (e.g. `{"ALL"}`, `{"USER", "ADMIN"}`). |
+| `responses` | Method | Response cases array. When empty, inferred from return type. |
+
+### @Response Options
+
+| Attribute | Description |
+|-----------|-------------|
+| `status` | HTTP status code (default: 200) |
+| `description` | Description of this response case |
+| `body` | Response body class. `void.class` for no body. |
+
+#### Example
+
+```java
+@NotionDoc(
+    name = "Get Member",
+    description = "Retrieves a member by ID",
+    auth = {"USER", "ADMIN"},
+    responses = {
+        @Response(status = 200, description = "Success", body = MemberResponse.class),
+        @Response(status = 404, description = "Not found", body = ErrorResponse.class),
+        @Response(status = 403, description = "Forbidden")
+    }
+)
+@GetMapping("/{id}")
+public BaseResponseData<MemberResponse> getMember(@PathVariable Long id) { ... }
+```
+
+> **Note:** Generic wrapper types like `BaseResponseData<T>` are fully supported.
+> The library resolves the type parameter `T` to the actual type and extracts nested fields recursively.
 
 ---
 
@@ -192,6 +221,40 @@ Creates a new user account
   | id         | Long           | (optional)  |
   | email      | String         | (optional)  |
   | createdAt  | LocalDateTime  | (optional)  |
+```
+
+### Multi-Response Example
+
+When `@Response` annotations are used, each response case is rendered separately:
+
+```
+## Response
+### 200 Success
+  ```json
+  {
+    "id": 0,
+    "email": "string"
+  }
+  ```
+  | Parameter | Type   | Description |
+  |-----------|--------|-------------|
+  | id        | Long   | (optional)  |
+  | email     | String | (optional)  |
+
+### 404 Not found
+  ```json
+  {
+    "code": "string",
+    "message": "string"
+  }
+  ```
+  | Parameter | Type   | Description |
+  |-----------|--------|-------------|
+  | code      | String | (optional)  |
+  | message   | String | (optional)  |
+
+### 403 Forbidden
+  No response body
 ```
 
 ### Nested Array Example

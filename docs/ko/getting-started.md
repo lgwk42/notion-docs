@@ -145,6 +145,35 @@ public class UserController {
 | `description` | 메서드 | 상세 페이지에 표시되는 API 설명. |
 | `domain` | 클래스 / 메서드 | 도메인 카테고리. 클래스 레벨은 전체 메서드에 적용되며, 메서드 레벨이 우선. |
 | `auth` | 메서드 | 접근 권한 배열 (예: `{"ALL"}`, `{"USER", "ADMIN"}`). |
+| `responses` | 메서드 | 응답 케이스 배열. 비어있으면 리턴 타입에서 자동 추론. |
+
+### @Response 옵션
+
+| 속성 | 설명 |
+|------|------|
+| `status` | HTTP 상태 코드 (기본값: 200) |
+| `description` | 응답 케이스 설명 |
+| `body` | 응답 본문 클래스. 본문 없음 시 `void.class`. |
+
+#### 사용 예시
+
+```java
+@NotionDoc(
+    name = "회원 조회",
+    description = "ID로 회원을 조회합니다",
+    auth = {"USER", "ADMIN"},
+    responses = {
+        @Response(status = 200, description = "정상 조회", body = MemberResponse.class),
+        @Response(status = 404, description = "회원 없음", body = ErrorResponse.class),
+        @Response(status = 403, description = "권한 없음")
+    }
+)
+@GetMapping("/{id}")
+public BaseResponseData<MemberResponse> getMember(@PathVariable Long id) { ... }
+```
+
+> **참고:** `BaseResponseData<T>` 같은 제네릭 래퍼 타입이 완전히 지원됩니다.
+> 라이브러리가 타입 파라미터 `T`를 실제 타입으로 리졸빙하여 중첩 필드까지 재귀적으로 추출합니다.
 
 ---
 
@@ -191,6 +220,40 @@ public class UserController {
   | id         | Long           | (optional)  |
   | email      | String         | (optional)  |
   | createdAt  | LocalDateTime  | (optional)  |
+```
+
+### 다중 응답 예시
+
+`@Response` 어노테이션을 사용하면 각 응답 케이스가 개별적으로 렌더링됩니다:
+
+```
+## Response
+### 200 정상 조회
+  ```json
+  {
+    "id": 0,
+    "email": "string"
+  }
+  ```
+  | Parameter | Type   | Description |
+  |-----------|--------|-------------|
+  | id        | Long   | (optional)  |
+  | email     | String | (optional)  |
+
+### 404 회원 없음
+  ```json
+  {
+    "code": "string",
+    "message": "string"
+  }
+  ```
+  | Parameter | Type   | Description |
+  |-----------|--------|-------------|
+  | code      | String | (optional)  |
+  | message   | String | (optional)  |
+
+### 403 권한 없음
+  No response body
 ```
 
 ### 중첩 배열 예시
