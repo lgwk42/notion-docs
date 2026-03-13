@@ -1,6 +1,8 @@
 package io.github.lgwk42.notiondocs.scanner;
 
 import jakarta.validation.constraints.NotNull;
+import io.github.lgwk42.notiondocs.annotation.NotionDoc;
+import io.github.lgwk42.notiondocs.annotation.Response;
 import io.github.lgwk42.notiondocs.model.ApiEndpointInfo;
 import io.github.lgwk42.notiondocs.model.ControllerGroup;
 import org.junit.jupiter.api.Test;
@@ -31,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @TestPropertySource(properties = "notion-docs.enabled=false")
-@Import(ApiEndpointScannerTest.SampleUserController.class)
+@Import({ApiEndpointScannerTest.SampleUserController.class, ApiEndpointScannerTest.SampleResponseController.class})
 class ApiEndpointScannerTest {
 
     @SpringBootApplication
@@ -62,6 +64,24 @@ class ApiEndpointScannerTest {
 
     record CreateUserRequest(@NotNull String name, @NotNull String email, Integer age) {}
     record UserResponse(Long id, String name, String email) {}
+    record ErrorResponse(String code, String message) {}
+
+    @RestController
+    @RequestMapping("/api/v1/members")
+    static class SampleResponseController {
+        @NotionDoc(
+                name = "Get Member",
+                responses = {
+                        @Response(status = 200, description = "Success", body = UserResponse.class),
+                        @Response(status = 404, description = "Not found", body = ErrorResponse.class),
+                        @Response(status = 403, description = "Forbidden")
+                }
+        )
+        @GetMapping("/{id}")
+        public UserResponse getMember(@PathVariable("id") Long id) {
+            return null;
+        }
+    }
 
     @Autowired
     private RequestMappingHandlerMapping handlerMapping;
@@ -168,6 +188,51 @@ class ApiEndpointScannerTest {
         assertEquals(2, listUsers.queryParams().size());
         assertFalse(listUsers.queryParams().get(0).required());
         assertEquals("0", listUsers.queryParams().get(0).defaultValue());
+    }
+
+    @Test
+    void scanExtractsResponseCases() {
+        DtoFieldExtractor extractor = new DtoFieldExtractor();
+        ApiEndpointScanner scanner = new ApiEndpointScanner(
+                handlerMapping, extractor,
+                new EndpointMetadataResolver("", List.of()),
+                new EndpointParameterExtractor(),
+                List.of(), List.of());
+        List<ControllerGroup> groups = scanner.scan();
+        ControllerGroup memberGroup = groups.stream()
+                .filter(g -> g.controllerName().equals("SampleResponseController"))
+                .findFirst().orElseThrow();
+        ApiEndpointInfo getMember = memberGroup.endpoints().stream()
+                .filter(e -> e.methodName().equals("getMember"))
+                .findFirst().orElseThrow();
+        assertEquals(3, getMember.responseCases().size());
+        assertEquals(200, getMember.responseCases().get(0).status());
+        assertEquals("Success", getMember.responseCases().get(0).description());
+        assertNotNull(getMember.responseCases().get(0).responseType());
+        assertFalse(getMember.responseCases().get(0).responseFields().isEmpty());
+        assertEquals(404, getMember.responseCases().get(1).status());
+        assertEquals("Not found", getMember.responseCases().get(1).description());
+        assertEquals(403, getMember.responseCases().get(2).status());
+        assertNull(getMember.responseCases().get(2).responseType());
+        assertTrue(getMember.responseCases().get(2).responseFields().isEmpty());
+    }
+
+    @Test
+    void scanReturnsEmptyResponseCasesWhenNotSpecified() {
+        DtoFieldExtractor extractor = new DtoFieldExtractor();
+        ApiEndpointScanner scanner = new ApiEndpointScanner(
+                handlerMapping, extractor,
+                new EndpointMetadataResolver("", List.of()),
+                new EndpointParameterExtractor(),
+                List.of(), List.of());
+        List<ControllerGroup> groups = scanner.scan();
+        ControllerGroup userGroup = groups.stream()
+                .filter(g -> g.controllerName().equals("SampleUserController"))
+                .findFirst().orElseThrow();
+        ApiEndpointInfo getUser = userGroup.endpoints().stream()
+                .filter(e -> e.methodName().equals("getUser"))
+                .findFirst().orElseThrow();
+        assertTrue(getUser.responseCases().isEmpty());
     }
 
     @Test

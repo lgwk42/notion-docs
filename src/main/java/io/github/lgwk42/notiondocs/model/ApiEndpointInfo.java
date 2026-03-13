@@ -18,6 +18,7 @@ import java.util.List;
  * @param requestBodyType request body type name (null if none)
  * @param responseFields  response body fields (empty list if none)
  * @param responseType    response type name (null if void)
+ * @param responseCases   multiple response cases from {@code @Response} annotations (empty if not specified)
  * @param controllerName  controller class name
  * @param methodName      handler method name
  */
@@ -35,6 +36,7 @@ public record ApiEndpointInfo(
         String requestBodyType,
         List<FieldInfo> responseFields,
         String responseType,
+        List<ResponseCaseInfo> responseCases,
         String controllerName,
         String methodName
 ) {

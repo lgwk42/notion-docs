@@ -2,6 +2,7 @@ package io.github.lgwk42.notiondocs.sync;
 
 import io.github.lgwk42.notiondocs.model.ApiEndpointInfo;
 import io.github.lgwk42.notiondocs.model.FieldInfo;
+import io.github.lgwk42.notiondocs.model.ResponseCaseInfo;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -39,6 +40,13 @@ public class ChangeDetector {
             appendFields(sb, endpoint.responseFields(), "RSF");
         } else {
             sb.append("RS:void|");
+        }
+        for (ResponseCaseInfo rc : endpoint.responseCases()) {
+            sb.append("RC:").append(rc.status()).append(":").append(rc.description()).append("|");
+            if (rc.responseType() != null) {
+                sb.append("RCT:").append(rc.responseType()).append("|");
+                appendFields(sb, rc.responseFields(), "RCF");
+            }
         }
         return sha256(sb.toString());
     }

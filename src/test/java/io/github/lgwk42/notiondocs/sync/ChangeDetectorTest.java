@@ -53,6 +53,7 @@ class ChangeDetectorTest {
                 List.of(), List.of(), List.of(),
                 List.of(), null,
                 List.of(), null,
+                List.of(),
                 "TestController", "testMethod"
         );
     }

@@ -6,6 +6,7 @@ import io.github.lgwk42.notiondocs.model.FieldInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
 
@@ -39,6 +40,19 @@ class DtoFieldExtractorTest {
 
     record CircularA(String value, CircularB other) {}
     record CircularB(String value, CircularA other) {}
+
+    // Generic wrapper similar to BaseResponseData<T>
+    static class BaseResponse {
+        private int status;
+        private String message;
+    }
+    static class BaseResponseData<T> extends BaseResponse {
+        private T data;
+    }
+    record InnerData(String id, String email) {}
+
+    @SuppressWarnings("unused")
+    private BaseResponseData<InnerData> dummyWrappedField;
 
     @Test
     void extractSimpleRecord() {
@@ -109,5 +123,23 @@ class DtoFieldExtractorTest {
         List<FieldInfo> fields = extractor.extract(listType);
         assertEquals(2, fields.size());
         assertEquals("name", fields.get(0).name());
+    }
+
+    @Test
+    void extractGenericWrapperResolvesTypeVariable() throws NoSuchFieldException {
+        Type wrappedType = DtoFieldExtractorTest.class.getDeclaredField("dummyWrappedField").getGenericType();
+        List<FieldInfo> fields = extractor.extract(wrappedType);
+        // Should have: data (with children id, email), status, message from BaseResponse
+        FieldInfo dataField = fields.stream()
+                .filter(f -> f.name().equals("data"))
+                .findFirst().orElseThrow(() -> new AssertionError("data field not found"));
+        assertEquals("InnerData", dataField.type());
+        assertFalse(dataField.children().isEmpty());
+        assertEquals(2, dataField.children().size());
+        assertEquals("id", dataField.children().get(0).name());
+        assertEquals("email", dataField.children().get(1).name());
+        // Should also have status and message from parent
+        assertTrue(fields.stream().anyMatch(f -> f.name().equals("status")));
+        assertTrue(fields.stream().anyMatch(f -> f.name().equals("message")));
     }
 }

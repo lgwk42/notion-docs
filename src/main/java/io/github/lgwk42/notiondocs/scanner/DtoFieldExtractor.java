@@ -9,6 +9,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -51,18 +53,19 @@ public class DtoFieldExtractor {
      * Extracts fields from the given type.
      */
     public List<FieldInfo> extract(Type type) {
-        return extract(type, new HashSet<>());
+        return extract(type, new HashSet<>(), Map.of());
     }
 
-    private List<FieldInfo> extract(Type type, Set<Class<?>> visited) {
-        Class<?> rawClass = resolveRawClass(type);
+    private List<FieldInfo> extract(Type type, Set<Class<?>> visited, Map<String, Type> typeVarMap) {
+        Type resolved = resolveTypeVariable(type, typeVarMap);
+        Class<?> rawClass = resolveRawClass(resolved);
         if (rawClass == null || isTerminal(rawClass) || rawClass == void.class || rawClass == Void.class) {
             return List.of();
         }
         if (Collection.class.isAssignableFrom(rawClass) || rawClass.isArray()) {
-            Type elementType = resolveCollectionElementType(type, rawClass);
+            Type elementType = resolveCollectionElementType(resolved, rawClass);
             if (elementType != null) {
-                return extract(elementType, visited);
+                return extract(elementType, visited, typeVarMap);
             }
             return List.of();
         }
@@ -73,11 +76,12 @@ public class DtoFieldExtractor {
             return List.of();
         }
         try {
+            Map<String, Type> childTypeVarMap = buildTypeVarMap(resolved, rawClass);
             List<FieldInfo> fields = new ArrayList<>();
             if (rawClass.isRecord()) {
-                extractFromRecord(rawClass, fields, visited);
+                extractFromRecord(rawClass, fields, visited, childTypeVarMap);
             } else {
-                extractFromPojo(rawClass, fields, visited);
+                extractFromPojo(rawClass, fields, visited, childTypeVarMap);
             }
             return Collections.unmodifiableList(fields);
         } finally {
@@ -85,10 +89,42 @@ public class DtoFieldExtractor {
         }
     }
 
-    private void extractFromRecord(Class<?> recordClass, List<FieldInfo> fields, Set<Class<?>> visited) {
+    /**
+     * Builds a mapping from type variable names to actual types.
+     * e.g. for BaseResponseData&lt;AppleVerifyResponse&gt;, maps "T" → AppleVerifyResponse
+     */
+    private Map<String, Type> buildTypeVarMap(Type type, Class<?> rawClass) {
+        if (!(type instanceof ParameterizedType pt)) {
+            return Map.of();
+        }
+        TypeVariable<?>[] typeParams = rawClass.getTypeParameters();
+        Type[] actualArgs = pt.getActualTypeArguments();
+        if (typeParams.length != actualArgs.length) {
+            return Map.of();
+        }
+        Map<String, Type> map = new HashMap<>();
+        for (int i = 0; i < typeParams.length; i++) {
+            map.put(typeParams[i].getName(), actualArgs[i]);
+        }
+        return map;
+    }
+
+    /**
+     * Resolves a TypeVariable to its actual type using the mapping.
+     */
+    private Type resolveTypeVariable(Type type, Map<String, Type> typeVarMap) {
+        if (type instanceof TypeVariable<?> tv) {
+            Type resolved = typeVarMap.get(tv.getName());
+            return resolved != null ? resolved : type;
+        }
+        return type;
+    }
+
+    private void extractFromRecord(Class<?> recordClass, List<FieldInfo> fields,
+                                    Set<Class<?>> visited, Map<String, Type> typeVarMap) {
         for (RecordComponent component : recordClass.getRecordComponents()) {
             String name = component.getName();
-            Type genericType = component.getGenericType();
+            Type genericType = resolveTypeVariable(component.getGenericType(), typeVarMap);
             String typeName = formatTypeName(genericType);
             boolean required = isRequired(component.getAnnotations());
             if (!required) {
@@ -98,12 +134,13 @@ public class DtoFieldExtractor {
                 } catch (NoSuchFieldException ignored) {
                 }
             }
-            List<FieldInfo> children = resolveChildren(genericType, visited);
+            List<FieldInfo> children = resolveChildren(genericType, visited, typeVarMap);
             fields.add(new FieldInfo(name, typeName, required, children));
         }
     }
 
-    private void extractFromPojo(Class<?> clazz, List<FieldInfo> fields, Set<Class<?>> visited) {
+    private void extractFromPojo(Class<?> clazz, List<FieldInfo> fields,
+                                  Set<Class<?>> visited, Map<String, Type> typeVarMap) {
         Class<?> current = clazz;
         while (current != null && current != Object.class) {
             for (Field field : current.getDeclaredFields()) {
@@ -111,29 +148,30 @@ public class DtoFieldExtractor {
                     continue;
                 }
                 String name = resolveFieldName(field);
-                Type genericType = field.getGenericType();
+                Type genericType = resolveTypeVariable(field.getGenericType(), typeVarMap);
                 String typeName = formatTypeName(genericType);
                 boolean required = isRequired(field.getAnnotations());
-                List<FieldInfo> children = resolveChildren(genericType, visited);
+                List<FieldInfo> children = resolveChildren(genericType, visited, typeVarMap);
                 fields.add(new FieldInfo(name, typeName, required, children));
             }
             current = current.getSuperclass();
         }
     }
 
-    private List<FieldInfo> resolveChildren(Type type, Set<Class<?>> visited) {
-        Class<?> raw = resolveRawClass(type);
+    private List<FieldInfo> resolveChildren(Type type, Set<Class<?>> visited, Map<String, Type> typeVarMap) {
+        Type resolved = resolveTypeVariable(type, typeVarMap);
+        Class<?> raw = resolveRawClass(resolved);
         if (raw == null || isTerminal(raw) || raw.isEnum()) {
             return List.of();
         }
         if (Collection.class.isAssignableFrom(raw) || raw.isArray()) {
-            Type elementType = resolveCollectionElementType(type, raw);
+            Type elementType = resolveCollectionElementType(resolved, raw);
             if (elementType != null) {
-                return extract(elementType, visited);
+                return extract(elementType, visited, typeVarMap);
             }
             return List.of();
         }
-        return extract(type, visited);
+        return extract(resolved, visited, typeVarMap);
     }
 
     private boolean isRequired(Annotation[] annotations) {

@@ -47,4 +47,10 @@ public @interface NotionDoc {
      * Access roles (e.g. {"ALL"}, {"USER", "ADMIN", "OWNER", "MASTER"}).
      */
     String[] auth() default {};
+
+    /**
+     * Response cases for this endpoint.
+     * When empty, the response is inferred from the method return type.
+     */
+    Response[] responses() default {};
 }

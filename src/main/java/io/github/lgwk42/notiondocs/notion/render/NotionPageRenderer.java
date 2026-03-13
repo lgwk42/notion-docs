@@ -2,6 +2,7 @@ package io.github.lgwk42.notiondocs.notion.render;
 
 import io.github.lgwk42.notiondocs.model.ApiEndpointInfo;
 import io.github.lgwk42.notiondocs.model.ParameterInfo;
+import io.github.lgwk42.notiondocs.model.ResponseCaseInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,6 +81,21 @@ public class NotionPageRenderer {
 
     private List<Map<String, Object>> renderResponse(ApiEndpointInfo endpoint) {
         List<Map<String, Object>> blocks = new ArrayList<>();
+        if (!endpoint.responseCases().isEmpty()) {
+            for (ResponseCaseInfo responseCase : endpoint.responseCases()) {
+                blocks.add(heading3(responseCase.status() + " " + responseCase.description()));
+                if (responseCase.responseType() == null) {
+                    blocks.add(paragraph("No response body"));
+                } else if (!responseCase.responseFields().isEmpty()) {
+                    String jsonExample = jsonExampleGenerator.generate(responseCase.responseFields());
+                    blocks.add(codeBlock(jsonExample, "json"));
+                    blocks.add(fieldTableBuilder.build(responseCase.responseFields()));
+                } else {
+                    blocks.add(paragraph(responseCase.responseType()));
+                }
+            }
+            return blocks;
+        }
         if (endpoint.responseType() == null) {
             blocks.add(paragraph("No response (void)"));
             return blocks;

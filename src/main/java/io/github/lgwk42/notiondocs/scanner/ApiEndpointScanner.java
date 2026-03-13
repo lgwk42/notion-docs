@@ -1,10 +1,13 @@
 package io.github.lgwk42.notiondocs.scanner;
 
+import io.github.lgwk42.notiondocs.annotation.NotionDoc;
+import io.github.lgwk42.notiondocs.annotation.Response;
 import io.github.lgwk42.notiondocs.model.ApiEndpointInfo;
 import io.github.lgwk42.notiondocs.model.ControllerGroup;
 import io.github.lgwk42.notiondocs.model.FieldInfo;
 import io.github.lgwk42.notiondocs.model.HeaderInfo;
 import io.github.lgwk42.notiondocs.model.ParameterInfo;
+import io.github.lgwk42.notiondocs.model.ResponseCaseInfo;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
@@ -139,6 +142,7 @@ public class ApiEndpointScanner {
                         ? fieldExtractor.extract(responseType) : List.of();
                 String responseTypeName = responseType != null
                         ? DtoFieldExtractor.formatTypeName(responseType) : null;
+                List<ResponseCaseInfo> responseCases = extractResponseCases(method);
                 endpoints.add(new ApiEndpointInfo(
                         apiName,
                         description,
@@ -153,11 +157,30 @@ public class ApiEndpointScanner {
                         requestBodyTypeName,
                         responseFields,
                         responseTypeName,
+                        responseCases,
                         controllerName,
                         method.getName()
                 ));
             }
         }
         return endpoints;
+    }
+
+    private List<ResponseCaseInfo> extractResponseCases(Method method) {
+        NotionDoc notionDoc = method.getAnnotation(NotionDoc.class);
+        if (notionDoc == null || notionDoc.responses().length == 0) {
+            return List.of();
+        }
+        List<ResponseCaseInfo> cases = new ArrayList<>();
+        for (Response response : notionDoc.responses()) {
+            String type = null;
+            List<FieldInfo> fields = List.of();
+            if (response.body() != void.class) {
+                type = DtoFieldExtractor.formatTypeName(response.body());
+                fields = fieldExtractor.extract(response.body());
+            }
+            cases.add(new ResponseCaseInfo(response.status(), response.description(), type, fields));
+        }
+        return cases;
     }
 }
