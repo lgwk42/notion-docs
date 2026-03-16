@@ -255,20 +255,17 @@ When `@Response` annotations are used, each response case is rendered separately
 
 ### 403 Forbidden
   No response body
-```
 
-### Nested Array Example
+## Nested Array Example
 
 For endpoints with array fields, the `[]` notation is used:
 
-```
   | Parameter          | Type         | Description |
   |--------------------|--------------|-------------|
   | items              | List<Item>   | (required)  |
   | items[].id         | Long         | (optional)  |
   | items[].name       | String       | (optional)  |
   | items[].tags       | List<String> | (optional)  |
-```
 
 ---
 
