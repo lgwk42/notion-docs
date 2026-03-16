@@ -254,20 +254,16 @@ public BaseResponseData<MemberResponse> getMember(@PathVariable Long id) { ... }
 
 ### 403 권한 없음
   No response body
-```
 
-### 중첩 배열 예시
-
+## 중첩 배열 예시
 배열 필드가 포함된 엔드포인트에서는 `[]` 표기법이 사용됩니다:
 
-```
   | Parameter          | Type         | Description |
   |--------------------|--------------|-------------|
   | items              | List<Item>   | (required)  |
   | items[].id         | Long         | (optional)  |
   | items[].name       | String       | (optional)  |
   | items[].tags       | List<String> | (optional)  |
-```
 
 ---
 
