@@ -27,4 +27,6 @@ Reporters will be anonymized upon request; otherwise, real names will be used by
 
 ---
 
+🇰🇷 [한국어 버전](docs/ko/security.md)
+
 Thank you.
